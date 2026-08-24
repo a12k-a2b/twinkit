@@ -127,8 +127,11 @@ export interface ProgressState {
   parity: ParityReport | null;
   manifest: ManifestSummary | null;
   simpleUi: boolean;
+  /** ADHD: full-screen one step (default) */
   sprintMode: boolean;
+  /** Show the 19-section mountain */
   showMountain: boolean;
+  /** Rotating quips — off by default */
   hypeOn: boolean;
   activeLane: LaneId;
   unlockedLanes: LaneId[];

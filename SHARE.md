@@ -1,21 +1,21 @@
-# TwinKit — for a friend
+# TwinKit — send this to a friend
 
-You’re looking at a **Mac setup twin** for Claude Code / Codex (optional Grok, Muse, Android, Daylight DC1).
+**Clone your Claude Code desk onto another Mac.**
 
-**Start here:** [README.md](README.md)
+1. On the old Mac:
+   ```bash
+   curl -fsSL https://raw.githubusercontent.com/a12k-a2b/twinkit/main/install.sh | bash
+   twin-discover
+   twin-pack
+   ```
+2. AirDrop the `~/Desktop/twinkit-pack-*` folder (FileVault SSD is better than iCloud).
+3. On the new Mac, same installer, then:
+   ```bash
+   twin-unpack --dry-run ~/Desktop/twinkit-pack-*
+   twin-unpack           ~/Desktop/twinkit-pack-*
+   twin-verify           ~/Desktop/twinkit-pack-*
+   ```
+4. Open the checklist: https://a12k-a2b.github.io/twinkit/
+5. You still sign into Claude, Codex, Chrome, and click Allow on Accessibility.
 
-## 60-second version
-
-1. `npm install && npm run dev`
-2. Pick **which Mac** → **desk** → **sprint length** (15 / 30 / 60 / 25 body double)
-3. Do **one step**. Download / copy / open Settings on the card.
-4. Timer ends → save `progress.json` → walk away.
-5. Tomorrow: **Do the next thing**.
-
-You still sign into Claude, Codex, and Chrome yourself.
-
-## Don’t skip
-
-- Pack exit **2** → read `SECRETS_REPORT.md`. Working as designed.
-- Save progress into the pack folder. Browser storage dies.
-- **Doesn’t apply** is a complete answer. No shame ritual.
+Repo: https://github.com/a12k-a2b/twinkit
