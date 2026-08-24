@@ -1,0 +1,81 @@
+import type { ModuleDef } from "./types";
+
+export const MODULES: ModuleDef[] = [
+  {
+    id: "core",
+    label: "Core Mac + shell",
+    description: "Homebrew, shell profile, Node, git basics",
+    defaultOn: true,
+    minutesHint: 25,
+  },
+  {
+    id: "claude",
+    label: "Claude Code",
+    description: "~/.claude, skills, MCP servers, auth, CLAUDE.md",
+    defaultOn: true,
+    minutesHint: 20,
+  },
+  {
+    id: "codex",
+    label: "Codex CLI",
+    description: "OpenAI Codex CLI, config, and Chrome extension",
+    defaultOn: true,
+    minutesHint: 15,
+  },
+  {
+    id: "grok",
+    label: "Grok Build CLI",
+    description: "xAI Grok / Build CLI wiring into Claude Code",
+    defaultOn: true,
+    minutesHint: 10,
+  },
+  {
+    id: "muse",
+    label: "Muse Spark",
+    description: "Muse Spark 1.2 + Claude Code integration",
+    defaultOn: true,
+    minutesHint: 10,
+  },
+  {
+    id: "android",
+    label: "Android + Gradle",
+    description: "SDK, JDK, Gradle caches, emulator tooling",
+    defaultOn: true,
+    minutesHint: 40,
+  },
+  {
+    id: "daylight",
+    label: "Daylight DC1",
+    description: "Daylight Computer DC1 mods, logging, local tools",
+    defaultOn: true,
+    minutesHint: 25,
+  },
+  {
+    id: "chrome",
+    label: "Browser extensions",
+    description: "Claude + Codex Chrome extensions and logins",
+    defaultOn: true,
+    minutesHint: 10,
+  },
+  {
+    id: "permissions",
+    label: "macOS permissions",
+    description: "Accessibility, Screen Recording, Computer Use, FDA",
+    defaultOn: true,
+    minutesHint: 15,
+  },
+  {
+    id: "ssh",
+    label: "SSH + Git identity",
+    description: "SSH keys, git user, GitHub auth, signing",
+    defaultOn: true,
+    minutesHint: 12,
+  },
+  {
+    id: "transfer",
+    label: "Transfer media",
+    description: "How the pack archive gets to the new Mac",
+    defaultOn: true,
+    minutesHint: 15,
+  },
+];
