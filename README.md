@@ -4,6 +4,8 @@
 
 You still sign in yourself. TwinKit keeps the mountain from becoming a fog.
 
+![TwinKit workflow: Discover → Pack → Unpack → Verify](docs/hero-workflow.jpg)
+
 | | |
 | --- | --- |
 | **Version** | 0.5.1 |
@@ -22,7 +24,7 @@ curl -fsSL https://raw.githubusercontent.com/a12k-a2b/twinkit/main/install.sh | 
 
 That puts `twin-discover`, `twin-pack`, `twin-unpack`, and `twin-verify` in `~/.twinkit` and (if it can) on your PATH via `~/.local/bin`.
 
-Checklist app (optional):
+Checklist app:
 
 ```bash
 git clone https://github.com/a12k-a2b/twinkit.git
@@ -31,11 +33,11 @@ npm install
 npm run dev
 ```
 
-To host it at `https://a12k-a2b.github.io/twinkit/`, turn on **Settings → Pages → GitHub Actions** once. The workflow is already in the repo.
+To host the checklist at `https://a12k-a2b.github.io/twinkit/`, turn on **Settings → Pages → GitHub Actions** once. The workflow is already in the repo.
 
 ---
 
-## Workflow
+## What you actually do
 
 ```
   OLD MAC (the one that works)          NEW MAC (home Mini / Studio)
@@ -49,16 +51,7 @@ To host it at `https://a12k-a2b.github.io/twinkit/`, turn on **Settings → Page
 
 Human auth, Accessibility, Chrome extensions, and API keys **never** get cloned. That’s a feature.
 
-```mermaid
-flowchart LR
-  A["Which Mac?"] --> B["Desk type"]
-  B --> C["One step"]
-  C --> D{Done / Skip / Doesn't apply}
-  D --> C
-  C --> E["Save progress.json"]
-  E --> F["Other Mac: Load progress"]
-  C --> G["You're done"]
-```
+![Next-up card: one step, Done or Skip](docs/hero-nextup.jpg)
 
 ### 1. Pick a lane (30 seconds)
 
@@ -86,13 +79,13 @@ Pick 15 / 30 / 60 minutes (or a 25-min body double). TwinKit shows **exactly one
 
 Timer ends → win screen + save `progress.json`. Stopping is the feature.
 
-Lanes stay locked until you unlock them:
-
 | Lane | Meaning |
 | --- | --- |
 | **Must** | Agents actually work |
 | **Later** | Android / Daylight DC1 |
 | **Polish** | Grok, Muse, extras |
+
+![Sprint: one step, full screen](docs/screenshot-sprint.png)
 
 ### 3. Move the pack
 
@@ -117,6 +110,30 @@ twin-verify           ~/Desktop/twinkit-pack-*
 
 Then the boring human part: Claude login, Codex login, Chrome extensions, **Accessibility / Screen Recording / Files and Folders**.
 
+![Session win](docs/screenshot-session-win.png)
+
+---
+
+## Screenshots
+
+| Desktop | Mobile |
+| --- | --- |
+| ![Desktop](docs/screenshot-desktop.png) | ![Mobile](docs/screenshot-mobile.png) |
+
+---
+
+## What’s in this repo
+
+```
+install.sh                 curl | bash — scripts only, no Node
+public/twinkit/            twin-discover / pack / unpack / verify + Claude skill
+src/components/twinkit/    Welcome, Sprint, Toolkit, HUD, win screen
+src/lib/twinkit/           Checklist, store, pack script source, presets
+docs/                      README screenshots
+```
+
+Full source. If a clone looks empty, you’re on an old commit — `git pull`.
+
 ---
 
 ## Scripts
@@ -139,25 +156,7 @@ Safety (non-negotiable):
 
 ---
 
-## Run the checklist locally
-
-Needs **Node 22**.
-
-```bash
-git clone https://github.com/a12k-a2b/twinkit.git
-cd twinkit
-npm install
-npm run dev
-```
-
-```bash
-npm run typecheck
-npm run build
-```
-
-Progress in the browser is `localStorage`. Always **Save progress** into the pack folder before switching machines.
-
-### Claude Code skill
+## Claude Code skill
 
 Installer copies this if `~/.claude` exists. Otherwise:
 
