@@ -15,7 +15,7 @@
    twin-unpack           ~/Desktop/twinkit-pack-*
    twin-verify           ~/Desktop/twinkit-pack-*
    ```
-4. Open the checklist: https://a12k-a2b.github.io/twinkit/
+4. Checklist: `git clone https://github.com/a12k-a2b/twinkit.git && cd twinkit && npm install && npm run dev`
 5. You still sign into Claude, Codex, Chrome, and click Allow on Accessibility.
 
 Repo: https://github.com/a12k-a2b/twinkit

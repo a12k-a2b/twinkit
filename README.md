@@ -22,9 +22,16 @@ curl -fsSL https://raw.githubusercontent.com/a12k-a2b/twinkit/main/install.sh | 
 
 That puts `twin-discover`, `twin-pack`, `twin-unpack`, and `twin-verify` in `~/.twinkit` and (if it can) on your PATH via `~/.local/bin`.
 
-Checklist lives in the browser — no install:
+Checklist app (optional):
 
-**[Open TwinKit](https://a12k-a2b.github.io/twinkit/)**
+```bash
+git clone https://github.com/a12k-a2b/twinkit.git
+cd twinkit
+npm install
+npm run dev
+```
+
+To host it at `https://a12k-a2b.github.io/twinkit/`, turn on **Settings → Pages → GitHub Actions** once. The workflow is already in the repo.
 
 ---
 
@@ -132,9 +139,9 @@ Safety (non-negotiable):
 
 ---
 
-## Run the checklist locally (optional)
+## Run the checklist locally
 
-Needs **Node 22**. Most people should just [open the hosted app](https://a12k-a2b.github.io/twinkit/).
+Needs **Node 22**.
 
 ```bash
 git clone https://github.com/a12k-a2b/twinkit.git

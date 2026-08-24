@@ -6,8 +6,6 @@ set -euo pipefail
 DEST="${TWINKIT_HOME:-$HOME/.twinkit}"
 BIN="${TWINKIT_BIN:-$HOME/.local/bin}"
 BASE="${TWINKIT_BASE:-https://raw.githubusercontent.com/a12k-a2b/twinkit/main/public/twinkit}"
-APP_URL="https://a12k-a2b.github.io/twinkit/"
-
 if ! command -v curl >/dev/null 2>&1; then
   echo "TwinKit needs curl." >&2
   exit 1
@@ -58,8 +56,9 @@ echo "  twin-unpack --dry-run ~/Desktop/twinkit-pack-*"
 echo "  twin-unpack           ~/Desktop/twinkit-pack-*"
 echo "  twin-verify           ~/Desktop/twinkit-pack-*"
 echo
-echo "Checklist (browser, no install):"
-echo "  $APP_URL"
+echo "Checklist app:"
+echo "  git clone https://github.com/a12k-a2b/twinkit.git"
+echo "  cd twinkit && npm install && npm run dev"
 echo
 echo "If $BIN is not on PATH yet, add this to ~/.zshrc:"
 echo "  export PATH=\"\$HOME/.local/bin:\$PATH\""
