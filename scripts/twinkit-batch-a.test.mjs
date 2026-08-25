@@ -157,6 +157,122 @@ describe("A4 secrets fail-closed and not persisted as values", () => {
     // original OUT path has no files containing sentinel
     const leaked = spawnSync("grep", ["-R", sentinel, out], { encoding: "utf8" });
     assert.notEqual(leaked.status, 0);
+    const hits = readFileSync(join(unsafe, "scan/hits.txt"), "utf8");
+    assert.doesNotMatch(hits, new RegExp(sentinel));
+  });
+});
+
+describe("A.1 fail-closed staging", () => {
+  it("scanner-write poison at $OUT quarantines (FAIL-CLOSED-OK)", () => {
+    const home = mkdtempSync(join(tmpdir(), "tk-a1a-home-"));
+    const parent = mkdtempSync(join(tmpdir(), "tk-a1a-parent-"));
+    const out = join(parent, "twinkit-pack-a");
+    mkdirSync(join(home, ".claude"), { recursive: true });
+    writeFileSync(join(home, ".claude/notes.md"), "clean\n");
+    mkdirSync(join(out, "scan/hits.txt"), { recursive: true });
+    spawnSync(bash, [pack], {
+      env: withFakeRsync({ HOME: home, TWINKIT_OUT: out, PATH: process.env.PATH }),
+      encoding: "utf8",
+    });
+    const plain = existsSync(out);
+    const unsafe = existsSync(`${out}-UNSAFE-DO-NOT-TRANSFER`);
+    assert.equal(plain && !unsafe, false, "FAIL-OPEN");
+  });
+
+  it("unreadable file does not leave a plain pack", () => {
+    const home = mkdtempSync(join(tmpdir(), "tk-a1b-home-"));
+    const out = join(mkdtempSync(join(tmpdir(), "tk-a1b-parent-")), "twinkit-pack-b");
+    mkdirSync(join(home, ".claude"), { recursive: true });
+    const secret = join(home, ".claude/secret.txt");
+    writeFileSync(secret, "x");
+    chmodSync(secret, 0);
+    spawnSync(bash, [pack], {
+      env: withFakeRsync({ HOME: home, TWINKIT_OUT: out, PATH: process.env.PATH }),
+      encoding: "utf8",
+    });
+    chmodSync(secret, 0o644);
+    assert.equal(existsSync(out), false, "LEFT-UNSCANNED-PACK");
+  });
+
+  it("clean home produces a real $OUT with no-hits report", () => {
+    const home = mkdtempSync(join(tmpdir(), "tk-clean-home-"));
+    const out = join(mkdtempSync(join(tmpdir(), "tk-clean-parent-")), "twinkit-pack-clean");
+    mkdirSync(join(home, ".claude"), { recursive: true });
+    writeFileSync(join(home, ".claude/notes.md"), "hello\n");
+    const res = spawnSync(bash, [pack], {
+      env: withFakeRsync({ HOME: home, TWINKIT_OUT: out, PATH: process.env.PATH }),
+      encoding: "utf8",
+    });
+    assert.equal(res.status, 0, res.stdout + res.stderr);
+    assert.equal(existsSync(out), true);
+    const report = readFileSync(join(out, "SECRETS_REPORT.md"), "utf8");
+    assert.match(report, /No pattern hits/);
+  });
+
+  it("preserves existing progress.json unless --reset", () => {
+    const home = mkdtempSync(join(tmpdir(), "tk-prog-home-"));
+    const out = join(mkdtempSync(join(tmpdir(), "tk-prog-parent-")), "twinkit-pack-p");
+    mkdirSync(join(home, ".claude"), { recursive: true });
+    writeFileSync(join(home, ".claude/notes.md"), "hello\n");
+    const first = spawnSync(bash, [pack], {
+      env: withFakeRsync({ HOME: home, TWINKIT_OUT: out, PATH: process.env.PATH }),
+      encoding: "utf8",
+    });
+    assert.equal(first.status, 0, first.stdout + first.stderr);
+    const marker = { version: 4, twinkit: "0.6.0", checked: { keepme: true } };
+    writeFileSync(join(out, "progress.json"), JSON.stringify(marker));
+    const second = spawnSync(bash, [pack], {
+      env: withFakeRsync({ HOME: home, TWINKIT_OUT: out, PATH: process.env.PATH }),
+      encoding: "utf8",
+    });
+    assert.equal(second.status, 0, second.stdout + second.stderr);
+    const kept = JSON.parse(readFileSync(join(out, "progress.json"), "utf8"));
+    assert.equal(kept.checked.keepme, true);
+  });
+});
+
+describe("A.1 verify exits nonzero on real fails", () => {
+  it("missing required tool -> nonzero", () => {
+    const p = mkdtempSync(join(tmpdir(), "tk-ver-p-"));
+    writeFileSync(join(p, "MANIFEST.md"), "# MANIFEST\n- git: git version 2.0\n");
+    mkdirSync(join(p, "claude"));
+    const bin = mkdtempSync(join(tmpdir(), "tk-ver-bin-"));
+    for (const t of ["bash", "sed", "grep", "awk", "date", "python3", "head", "tr", "wc", "ls", "cat", "mkdir"]) {
+      const src = spawnSync("bash", ["-c", `command -v ${t}`], { encoding: "utf8" }).stdout.trim();
+      if (src) spawnSync("ln", ["-sf", src, join(bin, t)]);
+    }
+    const res = spawnSync(bash, [verify, p], {
+      env: { HOME: mkdtempSync(join(tmpdir(), "tk-ver-h-")), PATH: bin },
+      encoding: "utf8",
+    });
+    assert.notEqual(res.status, 0, `missing-tool-exit=${res.status}\n${res.stdout}${res.stderr}`);
+  });
+
+  it("empty satisfied pack exits 0", () => {
+    const p = mkdtempSync(join(tmpdir(), "tk-ver-ok-"));
+    writeFileSync(join(p, "MANIFEST.md"), "# MANIFEST\n- git: (not found)\n");
+    const res = run(verify, [p], { HOME: mkdtempSync(join(tmpdir(), "tk-ver-okh-")) }, root);
+    assert.equal(res.status, 0, res.stdout + res.stderr);
+  });
+});
+
+describe("A.1 version + raycast source of truth", () => {
+  it("no 0.5.x leftovers in public/src/README/package.json", () => {
+    const files = [
+      "public/twinkit/prompt.md",
+      "public/twinkit/SKILL.md",
+      "src/lib/twinkit/types.ts",
+      "README.md",
+    ];
+    for (const f of files) {
+      const body = readFileSync(join(root, f), "utf8");
+      assert.doesNotMatch(body, /0\.5\.[0-9]/, f);
+    }
+  });
+
+  it("scripts.ts imports raycast.sh via ?raw", () => {
+    const body = readFileSync(join(root, "src/lib/twinkit/scripts.ts"), "utf8");
+    assert.match(body, /public\/twinkit\/raycast\.sh\?raw/);
   });
 });
 

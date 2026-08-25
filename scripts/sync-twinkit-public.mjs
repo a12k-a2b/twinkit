@@ -14,6 +14,7 @@ const required = [
   "twin-pack.sh",
   "twin-unpack.sh",
   "twin-verify.sh",
+  "raycast.sh",
 ];
 
 let failed = 0;

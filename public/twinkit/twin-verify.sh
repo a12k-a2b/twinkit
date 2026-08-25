@@ -102,5 +102,4 @@ fi
   echo "}"
 } > "$JSON"
 echo "==> $OUT pass=$pass warn=$warn fail=$fail"
-# Intentional gaps are recorded, not a process failure.
-exit 0
+[[ "$fail" -eq 0 ]]

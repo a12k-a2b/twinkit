@@ -6,6 +6,7 @@ import TWIN_DISCOVER_SH_RAW from "../../../public/twinkit/twin-discover.sh?raw";
 import TWIN_PACK_SH_RAW from "../../../public/twinkit/twin-pack.sh?raw";
 import TWIN_UNPACK_SH_RAW from "../../../public/twinkit/twin-unpack.sh?raw";
 import TWIN_VERIFY_SH_RAW from "../../../public/twinkit/twin-verify.sh?raw";
+import RAYCAST_SCRIPT_RAW from "../../../public/twinkit/raycast.sh?raw";
 
 export const TWINKIT_SH_VERSION = TWINKIT_VERSION;
 
@@ -13,6 +14,7 @@ export const TWIN_DISCOVER_SH = TWIN_DISCOVER_SH_RAW;
 export const TWIN_PACK_SH = TWIN_PACK_SH_RAW;
 export const TWIN_UNPACK_SH = TWIN_UNPACK_SH_RAW;
 export const TWIN_VERIFY_SH = TWIN_VERIFY_SH_RAW;
+export const RAYCAST_SCRIPT = RAYCAST_SCRIPT_RAW;
 
 export const TWINKIT_SKILL_MD = `---
 name: twinkit-migrate
@@ -41,15 +43,6 @@ export const TWINKIT_PROMPT_MD = `# TwinKit ${TWINKIT_VERSION}
 Help me twin my Claude/Codex Mac setup. Keep steps short.
 Old Mac: discover + pack. New Mac: unpack + re-auth + verify.
 Never invent secrets. Prefer redacted configs.
-`;
-
-export const RAYCAST_SCRIPT = `#!/bin/bash
-# @raycast.schemaVersion 1
-# @raycast.title TwinKit
-# @raycast.mode silent
-# @raycast.packageName TwinKit
-# Set TWINKIT_URL to your hosted checklist, or it opens the public repo.
-open "\${TWINKIT_URL:-https://github.com/a12k-a2b/twinkit}"
 `;
 
 export function downloadText(filename: string, content: string) {
