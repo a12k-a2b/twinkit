@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# TwinKit test fixture. Instant canned Homebrew — never the real brew.
+set -e
+case "${1:-}" in
+  --version|-v)
+    echo "Homebrew 0.0-test-fixture"
+    exit 0
+    ;;
+  bundle)
+    file=""
+    for a in "$@"; do
+      case "$a" in
+        --file=*) file="${a#--file=}" ;;
+      esac
+    done
+    if [[ -n "$file" ]]; then
+      printf '# TwinKit test Brewfile\n' > "$file"
+    fi
+    exit 0
+    ;;
+  list)
+    exit 0
+    ;;
+  *)
+    exit 0
+    ;;
+esac

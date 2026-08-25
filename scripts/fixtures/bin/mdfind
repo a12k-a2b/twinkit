@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# TwinKit test fixture. Instant empty Spotlight — never the real mdfind.
+exit 0

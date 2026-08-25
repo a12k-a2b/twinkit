@@ -12,6 +12,11 @@ const pack = join(root, "public/twinkit/twin-pack.sh");
 const discover = join(root, "public/twinkit/twin-discover.sh");
 const verify = join(root, "public/twinkit/twin-verify.sh");
 const bash = process.env.TWINKIT_BASH || "/bin/bash";
+const fixturesBin = join(root, "scripts/fixtures/bin");
+
+function testPath(...extraBins) {
+  return [...extraBins, fixturesBin, process.env.PATH || ""].filter(Boolean).join(":");
+}
 
 function withFakeRsync(env) {
   const bin = mkdtempSync(join(tmpdir(), "tk-bin-"));
@@ -30,25 +35,8 @@ else
 fi
 `,
   );
-  // Shadow real brew/mdfind so pack tests never hang on Homebrew.
-  writeFileSync(
-    join(bin, "brew"),
-    `#!/usr/bin/env bash
-case "\$1" in
-  --version|-v) echo "Homebrew 0.0-test-stub"; exit 0 ;;
-  bundle|list) exit 0 ;;
-  *) exit 0 ;;
-esac
-`,
-  );
-  writeFileSync(
-    join(bin, "mdfind"),
-    `#!/usr/bin/env bash
-exit 0
-`,
-  );
-  spawnSync("chmod", ["+x", join(bin, "rsync"), join(bin, "brew"), join(bin, "mdfind")]);
-  return { ...env, PATH: `${bin}:${env.PATH || process.env.PATH}` };
+  spawnSync("chmod", ["+x", join(bin, "rsync")]);
+  return { ...env, PATH: testPath(bin) };
 }
 
 
@@ -114,7 +102,7 @@ describe("A2 discover empty-array + no-match grep", () => {
       [discover],
       {
         env: {
-          PATH: process.env.PATH,
+          PATH: testPath(),
           HOME: home,
           TWINKIT_DISCOVER_OUT: out,
         },
@@ -332,6 +320,20 @@ describe("A.1 version + raycast source of truth", () => {
   it("scripts.ts imports raycast.sh via ?raw", () => {
     const body = readFileSync(join(root, "src/lib/twinkit/scripts.ts"), "utf8");
     assert.match(body, /public\/twinkit\/raycast\.sh\?raw/);
+  });
+});
+
+describe("CI hygiene: brew/mdfind fixtures", () => {
+  it("committed fixtures exist", () => {
+    assert.equal(existsSync(join(fixturesBin, "brew")), true);
+    assert.equal(existsSync(join(fixturesBin, "mdfind")), true);
+  });
+
+  it("twin-pack.sh still calls real brew/mdfind (shim is PATH-only)", () => {
+    const src = readFileSync(pack, "utf8");
+    assert.match(src, /command -v brew/);
+    assert.match(src, /brew bundle/);
+    assert.match(src, /mdfind/);
   });
 });
 

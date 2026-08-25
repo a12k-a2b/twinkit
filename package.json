@@ -12,7 +12,8 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 0.0.0.0 --port 4173",
     "typecheck": "tsc --noEmit",
-    "test": "node --test 'scripts/**/*.test.mjs'",
+    "test": "npm run test:fast",
+    "test:fast": "node --test scripts/twinkit-*.test.mjs",
     "sync:twinkit": "node scripts/sync-twinkit-public.mjs"
   },
   "dependencies": {
