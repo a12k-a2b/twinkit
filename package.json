@@ -1,17 +1,19 @@
 {
   "name": "twinkit",
   "private": true,
-  "version": "0.5.1",
+  "version": "0.6.0",
   "type": "module",
   "description": "Clone your Claude Code (and Codex) desk onto the Mac you leave at home.",
   "engines": {
-    "node": ">=22"
+    "node": "^20.19.0 || >=22.12.0"
   },
   "scripts": {
     "dev": "vite --host 0.0.0.0 --port 5173",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 0.0.0.0 --port 4173",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "node --test 'scripts/**/*.test.mjs'",
+    "sync:twinkit": "node scripts/sync-twinkit-public.mjs"
   },
   "dependencies": {
     "lucide-react": "^0.510.0",

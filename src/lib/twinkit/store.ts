@@ -27,6 +27,27 @@ import {
   playYeet,
 } from "./sounds";
 
+export function sessionElapsedMs(
+  sessionStartedAt: number | null,
+  paused: boolean,
+  pausedAt: number | null,
+  now: number,
+): number {
+  if (!sessionStartedAt) return 0;
+  const end = paused && pausedAt ? pausedAt : now;
+  return Math.max(0, end - sessionStartedAt);
+}
+
+export function shiftedSessionStart(
+  sessionStartedAt: number | null,
+  pausedAt: number | null,
+  now: number,
+): number {
+  if (!sessionStartedAt) return now;
+  if (!pausedAt) return sessionStartedAt;
+  return sessionStartedAt + Math.max(0, now - pausedAt);
+}
+
 const defaultModules = MODULES.filter((m) => m.defaultOn).map((m) => m.id);
 const DEFAULT_PRESET = SIMPLE_PRESETS[0]!;
 
@@ -368,7 +389,13 @@ export const useTwinStore = create<ProgressState & TwinActions>()(
           lastActiveAt: Date.now(),
         }),
 
-      resumeMission: () =>
+      resumeMission: () => {
+        const s = get();
+        const nextStart = shiftedSessionStart(
+          s.sessionStartedAt,
+          s.pausedAt,
+          Date.now(),
+        );
         set({
           paused: false,
           pausedAt: null,
@@ -376,8 +403,9 @@ export const useTwinStore = create<ProgressState & TwinActions>()(
           sprintMode: true,
           lastActiveAt: Date.now(),
           currentItemStartedAt: Date.now(),
-          sessionStartedAt: get().sessionStartedAt ?? Date.now(),
-        }),
+          sessionStartedAt: nextStart,
+        });
+      },
 
       toggleItem: (id, sectionId, title) => {
         const { checked, skipped, acceptedGaps, checkedAt, soundOn } = get();
@@ -528,7 +556,7 @@ export const useTwinStore = create<ProgressState & TwinActions>()(
           enabledModules: modules,
           profileId: preset.id,
           step: "mission",
-          startedAt: get().startedAt ?? Date.now(),
+          startedAt: Date.now(),
           yeeted: false,
           completedAt: null,
           paused: false,
@@ -548,6 +576,13 @@ export const useTwinStore = create<ProgressState & TwinActions>()(
           sessionExtraMin: 0,
           bodyDouble,
           currentItemStartedAt: Date.now(),
+          checked: {},
+          skipped: {},
+          acceptedGaps: {},
+          checkedAt: {},
+          celebratedSections: [],
+          lastDoneId: null,
+          lastDoneTitle: null,
         });
       },
 
@@ -637,7 +672,7 @@ export const useTwinStore = create<ProgressState & TwinActions>()(
       },
     }),
     {
-      name: "twinkit-progress-v5",
+      name: "twinkit-progress-v6",
       partialize: (s) => ({
         checked: s.checked,
         skipped: s.skipped,
@@ -645,7 +680,7 @@ export const useTwinStore = create<ProgressState & TwinActions>()(
         checkedAt: s.checkedAt,
         enabledModules: s.enabledModules,
         mode: s.mode,
-        step: s.step === "session-win" ? "mission" : s.step,
+        step: s.step,
         soundOn: s.soundOn,
         yeeted: s.yeeted,
         startedAt: s.startedAt,

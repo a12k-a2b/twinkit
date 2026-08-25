@@ -1,12 +1,17 @@
 #!/usr/bin/env bash
-# TwinKit discover 0.5.0 — inventory THIS Mac (no secrets dumped).
+# TwinKit discover 0.6.0 — inventory THIS Mac (no secrets dumped).
 set -euo pipefail
+
+if ! command -v python3 >/dev/null 2>&1; then
+  echo "!! python3 required." >&2
+  exit 1
+fi
 
 STAMP=$(date +%Y%m%d-%H%M)
 OUT="${TWINKIT_DISCOVER_OUT:-$HOME/Desktop/twinkit-discover-$STAMP}"
 mkdir -p "$OUT"
 
-echo "==> TwinKit discover → $OUT"
+echo "==> TwinKit discover 0.6.0 → $OUT"
 
 json_escape() {
   python3 -c 'import json,sys; print(json.dumps(sys.argv[1]))' "$1"
@@ -29,7 +34,11 @@ DAYLIGHT_HITS=()
 while IFS= read -r d; do
   [[ -n "$d" ]] && DAYLIGHT_HITS+=("$d")
 done <<EOF
-$(find "$HOME" -maxdepth 3 -type d \( -iname '*daylight*' -o -iname '*dc1*' \) 2>/dev/null | head -40 || true)
+$(find "$HOME" -maxdepth 3 -type d \( -iname '*daylight*' -o -iname '*dc1*' \) \
+    ! -path '*/Library/*' ! -path '*/.Trash/*' ! -path '*/node_modules/*' \
+    ! -path '*/.git/*' ! -path '*/dist/*' ! -path '*/target/*' ! -path '*/.venv/*' \
+    ! -name '*.pem' \
+    2>/dev/null | head -40 || true)
 EOF
 
 CLAUDE_DIR=0; [[ -d "$HOME/.claude" ]] && CLAUDE_DIR=1
@@ -41,7 +50,7 @@ DAYLIGHT_FLAG=0; [[ ${#DAYLIGHT_HITS[@]} -gt 0 ]] && DAYLIGHT_FLAG=1
 
 {
   echo "{"
-  echo "  \"twinkit\": \"0.5.0\","
+  echo "  \"twinkit\": \"0.6.0\","
   echo "  \"generatedAt\": \"$(date -Iseconds 2>/dev/null || date)\","
   echo "  \"host\": $(json_escape "$(scutil --get ComputerName 2>/dev/null || hostname)"),"
   echo "  \"arch\": $(json_escape "$(uname -m)"),"
@@ -64,12 +73,12 @@ DAYLIGHT_FLAG=0; [[ ${#DAYLIGHT_HITS[@]} -gt 0 ]] && DAYLIGHT_FLAG=1
   echo "    \"daylightHits\": $([ "$DAYLIGHT_FLAG" -eq 1 ] && echo true || echo false)"
   echo "  },"
   echo "  \"envNames\": ["
-  env | grep -E '^(ANDROID_|JAVA_|GRADLE_|CLAUDE_|OPENAI_|GROK_|MUSE_)' | sed 's/=.*//' | sort -u | awk 'BEGIN{f=0} {if(f) printf ",\n"; printf "    \"%s\"", $0; f=1} END{print ""}'
+  env | grep -E '^(ANDROID_|JAVA_|GRADLE_|CLAUDE_|OPENAI_|GROK_|MUSE_)' | sed 's/=.*//' | sort -u | awk 'BEGIN{f=0} {if(f) printf ",\n"; printf "    \"%s\"", $0; f=1} END{print ""}' || true
   echo "  ],"
   echo "  \"dirs\": {"
   echo "    \"daylight\": ["
   di=0
-  for d in "${DAYLIGHT_HITS[@]}"; do
+  for d in ${DAYLIGHT_HITS[@]+"${DAYLIGHT_HITS[@]}"}; do
     [[ $di -eq 0 ]] || echo ","
     printf '      %s' "$(json_escape "$d")"
     di=1
@@ -78,15 +87,20 @@ DAYLIGHT_FLAG=0; [[ ${#DAYLIGHT_HITS[@]} -gt 0 ]] && DAYLIGHT_FLAG=1
   echo "    ]"
   echo "  },"
   echo "  \"claude\": {"
-  if [[ -d "$HOME/.claude" ]]; then
-    echo "    \"skills\": ["
-    if [[ -d "$HOME/.claude/skills" ]]; then
-      ls -1 "$HOME/.claude/skills" 2>/dev/null | awk 'BEGIN{f=0} {if(f) printf ",\n"; printf "      \"%s\"", $0; f=1} END{print ""}'
-    fi
-    echo "    ]"
-  else
-    echo "    \"skills\": []"
+  echo "    \"skills\": ["
+  si=0
+  if [[ -d "$HOME/.claude/skills" ]]; then
+    while IFS= read -r sk; do
+      [[ -n "$sk" ]] || continue
+      [[ $si -eq 0 ]] || echo ","
+      printf '      %s' "$(json_escape "$sk")"
+      si=1
+    done <<EOF
+$(ls -1 "$HOME/.claude/skills" 2>/dev/null || true)
+EOF
   fi
+  echo ""
+  echo "    ]"
   echo "  }"
   echo "}"
 } > "$OUT/INVENTORY.json"

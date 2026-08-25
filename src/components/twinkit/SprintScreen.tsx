@@ -14,6 +14,7 @@ import {
   computeStats,
   getNextOpenItem,
   isDirty,
+  sessionElapsedMs,
   useTwinStore,
 } from "@/lib/twinkit/store";
 import {
@@ -73,16 +74,16 @@ export function SprintScreen() {
     return () => window.clearInterval(t);
   }, []);
 
-  // Fresh or stale timer: never dump the user into a win on first paint.
+  // Fresh timer only. An expired stamp restores the win screen — never a new sprint.
   useEffect(() => {
     if (state.step !== "mission") return;
+    if (state.paused && state.step === "mission") return;
     const budget =
       (state.sessionBudgetMin + state.sessionExtraMin) * 60 * 1000;
-    if (
-      !state.sessionStartedAt ||
-      Date.now() - state.sessionStartedAt >= budget
-    ) {
+    if (!state.sessionStartedAt) {
       startSession(state.sessionBudgetMin || 15, state.bodyDouble);
+    } else if (Date.now() - state.sessionStartedAt >= budget && !state.paused) {
+      endSession();
     }
     const arm = window.setTimeout(() => setArmed(true), 2000);
     return () => window.clearTimeout(arm);
@@ -91,9 +92,12 @@ export function SprintScreen() {
 
   const budgetMs =
     (state.sessionBudgetMin + state.sessionExtraMin) * 60 * 1000;
-  const elapsedMs = state.sessionStartedAt
-    ? now - state.sessionStartedAt
-    : 0;
+  const elapsedMs = sessionElapsedMs(
+    state.sessionStartedAt,
+    state.paused,
+    state.pausedAt,
+    now,
+  );
   const remainMs = Math.max(0, budgetMs - elapsedMs);
   const remainLabel = formatClock(remainMs);
 
@@ -242,6 +246,7 @@ export function SprintScreen() {
           laterWaiting={laterWaiting}
           polishWaiting={polishWaiting}
           twinReady={stats.twinReady}
+          unacceptedGaps={stats.unacceptedGaps}
         />
       )}
 
@@ -269,15 +274,18 @@ function LaneClear({
   laterWaiting,
   polishWaiting,
   twinReady,
+  unacceptedGaps,
 }: {
   lane: LaneId;
   laterWaiting: number;
   polishWaiting: number;
   twinReady: boolean;
+  unacceptedGaps: number;
 }) {
   const unlockLane = useTwinStore((s) => s.unlockLane);
   const completeMission = useTwinStore((s) => s.completeMission);
   const endSession = useTwinStore((s) => s.endSession);
+  const acceptAllGaps = useTwinStore((s) => s.acceptAllGaps);
 
   if (twinReady) {
     return (
@@ -289,6 +297,26 @@ function LaneClear({
           onClick={() => completeMission()}
         >
           Celebrate
+        </button>
+      </div>
+    );
+  }
+
+  if (unacceptedGaps > 0) {
+    return (
+      <div className="rounded-2xl border border-warn/40 bg-bg-elevated p-5">
+        <p className="text-lg font-semibold text-fg">
+          {unacceptedGaps} skipped {unacceptedGaps === 1 ? "item" : "items"}
+        </p>
+        <p className="mt-1 text-sm text-fg-muted">
+          Skip-for-now is not done. Accept them as “doesn’t apply”, or they’ll come back.
+        </p>
+        <button
+          type="button"
+          className="mt-4 w-full rounded-xl bg-accent py-3 text-sm font-semibold text-accent-fg"
+          onClick={() => acceptAllGaps()}
+        >
+          Doesn’t apply — accept the gaps
         </button>
       </div>
     );

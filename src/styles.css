@@ -177,7 +177,8 @@
   .check-pop,
   .section-flash,
   .yeet-out,
-  .shimmer {
+  .shimmer,
+  .confetti-piece {
     animation: none !important;
   }
 }

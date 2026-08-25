@@ -1,7 +1,7 @@
 import type { ChecklistSection } from "./types";
 
 /**
- * TwinKit 0.2 migration map — discover → pack → unpack → verify.
+ * TwinKit 0.6.0 migration map — discover → pack → unpack → verify.
  * Times are rough human effort, not pure download time.
  */
 export const SECTIONS: ChecklistSection[] = [
@@ -72,7 +72,7 @@ export const SECTIONS: ChecklistSection[] = [
         id: "pack-download-script",
         title: "Download twin-pack.sh from Toolkit",
         detail:
-          "Pack 0.2: secret scan, redacted shell rc, no cp -R fallback, progress.json scaffold.",
+          "Pack 0.6: secret scan (fail-closed), redacted shell rc, no cp -R fallback, progress.json scaffold.",
         minutes: 1,
         kind: "download",
         modules: ["core"],
@@ -446,7 +446,7 @@ export const SECTIONS: ChecklistSection[] = [
         kind: "script",
         modules: ["core"],
         phases: ["unpack"],
-        command: "bash twin-unpack.sh --dry-run ~/twinkit-pack-*",
+        command: "bash twin-unpack.sh --dry-run ~/Desktop/twinkit-pack-*",
       },
       {
         id: "unpack-run-script",
@@ -456,7 +456,7 @@ export const SECTIONS: ChecklistSection[] = [
         kind: "script",
         modules: ["core"],
         phases: ["unpack"],
-        command: "bash twin-unpack.sh ~/twinkit-pack-*",
+        command: "bash twin-unpack.sh ~/Desktop/twinkit-pack-*",
       },
       {
         id: "unpack-shell-rc",
@@ -945,7 +945,7 @@ export const SECTIONS: ChecklistSection[] = [
         kind: "script",
         modules: ["core"],
         phases: ["unpack"],
-        command: "bash twin-verify.sh ~/twinkit-pack-*",
+        command: "bash twin-verify.sh ~/Desktop/twinkit-pack-*",
       },
       {
         id: "unpack-read-parity",

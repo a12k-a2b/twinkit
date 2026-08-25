@@ -8,7 +8,7 @@ You still sign in yourself. TwinKit keeps the mountain from becoming a fog.
 
 | | |
 | --- | --- |
-| **Version** | 0.5.1 |
+| **Version** | 0.6.0 |
 | **What it is** | Four Terminal scripts + a timed checklist in the browser |
 | **Who it’s for** | People whose *primary* Claude Code environment is a Mac, cloning it to a Mini / Studio / spare |
 | **What it is not** | Auto-login, a native menu bar app, or a cloud sync service |
@@ -49,7 +49,7 @@ To host the checklist at `https://a12k-a2b.github.io/twinkit/`, turn on **Settin
                                         8. Sprint the checklist until done
 ```
 
-Human auth, Accessibility, Chrome extensions, and API keys **never** get cloned. That’s a feature.
+TwinKit redacts shell rc files, skips known credential filenames, and scans the pack for common secret patterns. This is **best-effort, not a guarantee** — the pack can still contain sensitive configuration (git config, tool JSON, Gradle init scripts). Treat the pack folder as secret: keep it on a FileVault volume and delete it after transfer. You still sign into Claude, Codex, Chrome, and click Allow on Accessibility yourself.
 
 ![Next-up card: one step, Done or Skip](docs/hero-nextup.jpg)
 
@@ -150,9 +150,9 @@ Pack **requires `rsync`**. There is no `cp -R` fallback.
 Safety (non-negotiable):
 
 - Shell rc is **redacted** by default (`TWINKIT_PACK_RAW_RC=1` to keep raw)
-- Secret patterns (`sk-`, `ghp_`, `AKIA`, private key banners, …) **fail the pack** unless `TWINKIT_ALLOW_SECRETS=1`
+- Secret patterns (`sk-`, `ghp_`, `ghu_`, `xai-`, `AKIA`, private key banners, …) **fail the pack** unless `TWINKIT_ALLOW_SECRETS=1`. Hits are stored as path:line:pattern-id only; the pack is renamed `…-UNSAFE-DO-NOT-TRANSFER`
 - SSH **public** keys only
-- Claude / Codex **credentials excluded**
+- Claude / Codex credential filenames are skipped; this is not a guarantee
 
 ---
 

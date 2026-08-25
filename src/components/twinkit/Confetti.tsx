@@ -30,7 +30,7 @@ export function Confetti({ active }: { active: boolean }) {
       {pieces.map((p) => (
         <span
           key={p.id}
-          className="absolute top-0 rounded-sm"
+          className="confetti-piece absolute top-0 rounded-sm"
           style={
             {
               left: p.left,

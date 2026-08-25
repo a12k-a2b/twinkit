@@ -66,7 +66,7 @@ export type AppStep =
   | "session-win"
   | "complete";
 
-export const TWINKIT_VERSION = "0.5.0";
+export const TWINKIT_VERSION = "0.6.0";
 export const PROGRESS_FILE_VERSION = 4;
 
 export type ParityStatus = "pass" | "warn" | "fail" | "skip";

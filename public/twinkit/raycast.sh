@@ -3,4 +3,5 @@
 # @raycast.title TwinKit
 # @raycast.mode silent
 # @raycast.packageName TwinKit
-open "${TWINKIT_URL:-https://YOUR-TWINKIT-APP.example}"
+# Optional: export TWINKIT_URL="https://your-hosted-checklist"
+open "${TWINKIT_URL:-https://github.com/a12k-a2b/twinkit}"
