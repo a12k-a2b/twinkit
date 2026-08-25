@@ -291,15 +291,17 @@ patterns = [
     ("pem", re.compile(r"-----BEGIN (RSA |OPENSSH |EC )?PRIVATE KEY-----")),
     ("bearer", re.compile(r"Bearer [A-Za-z0-9._\-]{20,}")),
 ]
-skip_names = {"SECRETS_REPORT.md", "hits.txt", "THREAT_MODEL.md"}
+skip_rel = {"SECRETS_REPORT.md", "THREAT_MODEL.md", "scan/hits.txt"}
 hits = []
 try:
     for dirpath, dirs, files in os.walk(root):
-        dirs[:] = [d for d in dirs if d != "scan"]
+        if Path(dirpath) == root:
+            dirs[:] = [d for d in dirs if d != "scan"]
         for fn in files:
-            if fn in skip_names:
-                continue
             p = Path(dirpath) / fn
+            rel = p.relative_to(root).as_posix()
+            if rel in skip_rel:
+                continue
             if not p.is_file():
                 continue
             try:

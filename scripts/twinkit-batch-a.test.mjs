@@ -162,6 +162,48 @@ describe("A4 secrets fail-closed and not persisted as values", () => {
   });
 });
 
+function packWithFakeRsync(home, out) {
+  return spawnSync(bash, [pack], {
+    env: withFakeRsync({ HOME: home, TWINKIT_OUT: out, PATH: process.env.PATH }),
+    encoding: "utf8",
+  });
+}
+
+function assertQuarantinedSecret(out, res, sentinel) {
+  assert.equal(res.status, 2, res.stdout + res.stderr);
+  assert.equal(existsSync(out), false, "SECRET-SHIPPED");
+  const unsafe = `${out}-UNSAFE-DO-NOT-TRANSFER`;
+  assert.equal(existsSync(unsafe), true);
+  const report = readFileSync(join(unsafe, "SECRETS_REPORT.md"), "utf8");
+  const hits = readFileSync(join(unsafe, "scan/hits.txt"), "utf8");
+  assert.doesNotMatch(report, new RegExp(sentinel));
+  assert.doesNotMatch(hits, new RegExp(sentinel));
+}
+
+describe("A.2 scanner skips only generated root artifacts", () => {
+  const sentinel = "sk-AAAAAAAAAAAAAAAA";
+
+  for (const name of ["hits.txt", "SECRETS_REPORT.md", "THREAT_MODEL.md"]) {
+    it(`scans a copied source file named ${name}`, () => {
+      const home = mkdtempSync(join(tmpdir(), "tk-a2-home-"));
+      const out = join(mkdtempSync(join(tmpdir(), "tk-a2-out-")), "p");
+      mkdirSync(join(home, ".claude"), { recursive: true });
+      writeFileSync(join(home, ".claude", name), `token ${sentinel}\n`);
+      const res = packWithFakeRsync(home, out);
+      assertQuarantinedSecret(out, res, sentinel);
+    });
+  }
+
+  it("scans files inside a nested source directory named scan/", () => {
+    const home = mkdtempSync(join(tmpdir(), "tk-a2-scan-home-"));
+    const out = join(mkdtempSync(join(tmpdir(), "tk-a2-scan-out-")), "p");
+    mkdirSync(join(home, ".claude/scan"), { recursive: true });
+    writeFileSync(join(home, ".claude/scan/x.txt"), `token ${sentinel}\n`);
+    const res = packWithFakeRsync(home, out);
+    assertQuarantinedSecret(out, res, sentinel);
+  });
+});
+
 describe("A.1 fail-closed staging", () => {
   it("scanner-write poison at $OUT quarantines (FAIL-CLOSED-OK)", () => {
     const home = mkdtempSync(join(tmpdir(), "tk-a1a-home-"));
