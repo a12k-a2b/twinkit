@@ -30,7 +30,24 @@ else
 fi
 `,
   );
-  spawnSync("chmod", ["+x", join(bin, "rsync")]);
+  // Shadow real brew/mdfind so pack tests never hang on Homebrew.
+  writeFileSync(
+    join(bin, "brew"),
+    `#!/usr/bin/env bash
+case "\$1" in
+  --version|-v) echo "Homebrew 0.0-test-stub"; exit 0 ;;
+  bundle|list) exit 0 ;;
+  *) exit 0 ;;
+esac
+`,
+  );
+  writeFileSync(
+    join(bin, "mdfind"),
+    `#!/usr/bin/env bash
+exit 0
+`,
+  );
+  spawnSync("chmod", ["+x", join(bin, "rsync"), join(bin, "brew"), join(bin, "mdfind")]);
   return { ...env, PATH: `${bin}:${env.PATH || process.env.PATH}` };
 }
 
