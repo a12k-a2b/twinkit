@@ -18,3 +18,6 @@ Keep it simple:
 5. "Doesn't apply" is the explicit OK to skip. "Skip for now" comes back later.
 
 Scripts: twin-discover.sh, twin-pack.sh, twin-unpack.sh, twin-verify.sh
+
+Continuous handoff (2–3 Macs): `twinkit sync` — exclusive lock + idle bounce.
+See docs/SYNC.md. Never sync auth.json, glass locks, or live Cursor SQLite.

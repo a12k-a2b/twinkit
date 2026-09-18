@@ -11,7 +11,7 @@ You still sign in yourself. TwinKit keeps the mountain from becoming a fog.
 | **Version** | 0.6.0 |
 | **What it is** | Four Terminal scripts + a timed checklist in the browser |
 | **Who it’s for** | People whose *primary* Claude Code environment is a Mac, cloning it to a Mini / Studio / spare |
-| **What it is not** | Auto-login, a native menu bar app, or a cloud sync service |
+| **What it is not** | Auto-login, a native menu bar app, or live SQLite sync while apps are open |
 | **License** | MIT |
 
 ---
@@ -125,11 +125,13 @@ Then the boring human part: Claude login, Codex login, Chrome extensions, **Acce
 ## What’s in this repo
 
 ```
-install.sh                 curl | bash — scripts only, no Node
-public/twinkit/            twin-discover / pack / unpack / verify + Claude skill
+install.sh                 curl | bash — scripts + TwinKit Sync, no Node
+public/twinkit/            twin-discover / pack / unpack / verify + twinkit / twinkit-sync
+sync/                      TwinKit Sync (python3) — lock, rewrite, bounce, adapters
+sync/launchd/              3h idle-gated + nightly deep plist templates
 src/components/twinkit/    Welcome, Sprint, Toolkit, HUD, win screen
 src/lib/twinkit/           Checklist, store, pack script source, presets
-docs/                      README screenshots
+docs/                      README screenshots + SYNC.md
 ```
 
 Full source. If a clone looks empty, you’re on an old commit — `git pull`.
@@ -164,6 +166,36 @@ Installer copies this if `~/.claude` exists. Otherwise:
 mkdir -p ~/.claude/skills/twinkit-migrate
 cp ~/.twinkit/SKILL.md ~/.claude/skills/twinkit-migrate/SKILL.md
 ```
+
+---
+
+## TwinKit Sync (2–3 Macs)
+
+One-shot pack clones a desk. **TwinKit Sync** keeps Cursor / Codex / Claude Code / Antigravity state moving between Macs you already use — Air (`/Users/anjan`), mini (`/Users/anjanmacmini`), optional 3rd — with an exclusive lock and an **idle bounce** because those apps stay open.
+
+```bash
+twinkit sync init --machine air          # or mini / other
+twinkit sync checkout                    # this desk owns live harnesses
+# …work…
+twinkit sync bounce                      # quit-if-idle → pack → vault → import → relaunch
+twinkit sync release                     # pack + push + unlock (desk switch)
+twinkit sync schedule install            # launchd: 3h idle-gated + nightly deep
+twinkit sync doctor
+```
+
+Notification after a bounce: **TwinKit Sync bounced Cursor+Codex**.
+
+| | |
+| --- | --- |
+| Transport | Private **git vault** (best for 3 machines) or a local **Syncthing** folder |
+| Path rewrite | Mandatory on import. Air `/Users/anjan` is a prefix of mini `/Users/anjanmacmini` — replacement is boundary-aware. Optional canon root: `/Users/Shared/Projects` |
+| Excluded | `auth.json`, Keychain, glass locks (`~/.daylight/glass`), adb, credentials, statsig, WAL/SHM, huge caches |
+| Codex size | `sessions: last_N_days` (default 30); `--deep` for a nightly full tree |
+| Idle bounce | No agent children, session files quiet ≥ 15 min, conservative CPU/network. Refuses if mid-run. `--now --force` quits even when not idle |
+
+Full guide, pairing, heuristics, and prior-art credits: **[docs/SYNC.md](docs/SYNC.md)**.
+
+Ideas borrowed (not vendored): TwinKit pack/redact, [cursaves](https://github.com/search?q=cursaves) (Cursor snapshots + “don’t write while running”), codexSync / codex-session-tui (cold Codex + backup-before-overwrite), claudesync / ccsync (allowlists, Syncthing, **root-relative** Claude project identity), Antigravity community rclone cold backup.
 
 ---
 
