@@ -6,3 +6,6 @@ dist
 .env.*
 *.local
 .vite
+__pycache__/
+*.py[cod]
+.pytest_cache/
