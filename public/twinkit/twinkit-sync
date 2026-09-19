@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# TwinKit Sync launcher — python3 -m twinkit_sync
+# Looks for the package next to a git checkout, then ~/.twinkit/sync-pkg.
+set -euo pipefail
+
+here=$(cd "$(dirname "$0")" && pwd)
+
+candidates=()
+if [[ -n "${TWINKIT_SYNC_PKG:-}" ]]; then
+  candidates+=("$TWINKIT_SYNC_PKG")
+fi
+# Repo layout: public/twinkit/twinkit-sync → ../../sync
+candidates+=("$here/../../sync")
+candidates+=("${TWINKIT_HOME:-$HOME/.twinkit}/sync-pkg")
+candidates+=("$here/sync-pkg")
+
+pkg=""
+for c in "${candidates[@]}"; do
+  if [[ -d "$c/twinkit_sync" ]]; then
+    pkg="$c"
+    break
+  fi
+done
+
+if [[ -z "$pkg" ]]; then
+  echo "TwinKit Sync: cannot find the twinkit_sync package." >&2
+  echo "  git clone https://github.com/a12k-a2b/twinkit.git && ./install.sh" >&2
+  exit 1
+fi
+
+if ! command -v python3 >/dev/null 2>&1; then
+  echo "TwinKit Sync needs python3." >&2
+  exit 1
+fi
+
+export PYTHONPATH="$pkg${PYTHONPATH:+:$PYTHONPATH}"
+exec python3 -m twinkit_sync "$@"

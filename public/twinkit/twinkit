@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# TwinKit dispatcher. `twinkit sync …` → twinkit-sync. One-shot pack stays twin-*.
+set -euo pipefail
+
+here=$(cd "$(dirname "$0")" && pwd)
+BIN="${TWINKIT_BIN:-$HOME/.local/bin}"
+
+if [[ "${1:-}" == "sync" ]]; then
+  shift
+  if [[ -x "$here/twinkit-sync" ]]; then
+    exec "$here/twinkit-sync" "$@"
+  fi
+  if command -v twinkit-sync >/dev/null 2>&1; then
+    exec twinkit-sync "$@"
+  fi
+  echo "twinkit-sync not installed. Re-run install.sh from a TwinKit checkout." >&2
+  exit 1
+fi
+
+cat <<EOF
+TwinKit — one-shot desk clone + Sync (cold harness handoff)
+
+One-shot (AirDrop / SSD):
+  twin-discover   twin-pack   twin-unpack   twin-verify
+
+Continuous (2–3 Macs, exclusive lock):
+  twinkit sync init | status | push | pull | sync
+  twinkit sync checkout | release
+  twinkit sync bounce [--harness cursor,codex,claude,ag] [--now] [--force]
+  twinkit sync schedule install | uninstall
+  twinkit sync doctor
+
+Docs: docs/SYNC.md
+EOF

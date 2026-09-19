@@ -14,6 +14,7 @@
     "typecheck": "tsc --noEmit",
     "test": "npm run test:fast",
     "test:fast": "node --test scripts/twinkit-*.test.mjs",
+    "test:sync": "PYTHONPATH=sync python3 -m unittest discover -s sync/tests -p 'test_*.py'",
     "sync:twinkit": "node scripts/sync-twinkit-public.mjs"
   },
   "dependencies": {
