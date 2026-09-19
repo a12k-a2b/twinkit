@@ -22,8 +22,11 @@ class CliTests(unittest.TestCase):
         os.environ["TWINKIT_SYNC_CONFIG"] = str(self.config)
         os.environ["TWINKIT_SYNC_VAULT"] = str(self.vault)
         os.environ["TWINKIT_MACHINE_ID"] = "air"
+        # CLI tests must not read the host process table (macOS runners have ssh-agent).
+        os.environ["TWINKIT_SYNC_STUB_PROCS"] = "1"
 
     def tearDown(self):
+        os.environ.pop("TWINKIT_SYNC_STUB_PROCS", None)
         self.tmp.cleanup()
 
     def test_init_status_doctor_checkout_release(self):

@@ -1,3 +1,4 @@
+import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -63,6 +64,14 @@ class BounceTests(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.vault = Path(self.tmp.name)
         (self.vault / ".twinkit").mkdir()
+        for key in (
+            "TWINKIT_SYNC_VAULT",
+            "TWINKIT_SYNC_CONFIG",
+            "TWINKIT_SYNC_ROOT",
+            "TWINKIT_MACHINE_ID",
+            "TWINKIT_SYNC_STUB_PROCS",
+        ):
+            os.environ.pop(key, None)
 
     def tearDown(self):
         self.tmp.cleanup()

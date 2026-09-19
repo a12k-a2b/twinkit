@@ -22,6 +22,7 @@ and we have no session-mtime evidence. An app that is not running is idle.
 
 from __future__ import annotations
 
+import re
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -41,6 +42,15 @@ AGENT_CMDLINE_MARKERS = (
 )
 
 DEFAULT_CPU_BUSY = 8.0
+
+# CLI ids like ``ag`` are too short to search for — ``ag`` lives inside
+# ``ssh-agent`` / ``UserEventAgent`` and made macOS CI think Antigravity was mid-run.
+HARNESS_CMDLINE_TOKENS = {
+    "cursor": ("cursor",),
+    "codex": ("codex",),
+    "claude": ("claude",),
+    "ag": ("antigravity",),
+}
 
 
 @dataclass
@@ -90,14 +100,33 @@ class IdleProbes:
     app_running: bool | None = None
 
 
+def _has_token(blob: str, token: str) -> bool:
+    """True if ``token`` appears as a path/word component, not inside ``agent``."""
+    if not token or len(token) < 3:
+        return False
+    return re.search(rf"(?<![A-Za-z0-9]){re.escape(token.lower())}(?![A-Za-z0-9])", blob.lower()) is not None
+
+
+def harness_tokens(harness: str) -> tuple[str, ...]:
+    return HARNESS_CMDLINE_TOKENS.get(harness, (harness,) if len(harness) >= 3 else ())
+
+
 def cmdline_looks_like_agent(cmdline: str, name: str = "", harness: str = "") -> bool:
     blob = f"{name} {cmdline}".lower()
     if any(marker in blob for marker in AGENT_CMDLINE_MARKERS):
         return True
-    # "agent" / "composer" only count when this harness is named in the command.
-    if harness and harness.lower() in blob and ("agent" in blob or "composer" in blob):
+    # "agent" / "composer" only count when this harness is named as a token.
+    if ("agent" in blob or "composer" in blob) and any(
+        _has_token(blob, tok) for tok in harness_tokens(harness)
+    ):
         return True
     return False
+
+
+def _blob_names_harness(blob: str, harness: str, process_names: list[str]) -> bool:
+    if any(_has_token(blob, n) for n in process_names if len(n) >= 3):
+        return True
+    return any(_has_token(blob, tok) for tok in harness_tokens(harness))
 
 
 def _newest(mtimes: Iterable[float]) -> float | None:
@@ -121,7 +150,7 @@ def detect_idle(
     matching = [
         p
         for p in probes.processes
-        if p.name.lower() in names or any(n in p.name.lower() for n in names)
+        if p.name.lower() in names or any(_has_token(p.name, n) for n in names)
     ]
     app_running = probes.app_running if probes.app_running is not None else bool(matching)
     cpu = max((p.cpu for p in matching), default=0.0)
@@ -132,7 +161,7 @@ def detect_idle(
         if cmdline_looks_like_agent(p.cmdline, p.name, harness)
         and (
             (p.parent_pid is not None and any(p.parent_pid == m.pid for m in matching))
-            or any(n in f"{p.name} {p.cmdline}".lower() for n in names)
+            or _blob_names_harness(f"{p.name} {p.cmdline}", harness, names)
         )
     ]
     if not children:
@@ -140,10 +169,7 @@ def detect_idle(
             p
             for p in probes.processes
             if cmdline_looks_like_agent(p.cmdline, p.name, harness)
-            and (
-                any(n in f"{p.name} {p.cmdline}".lower() for n in names)
-                or harness.lower() in f"{p.name} {p.cmdline}".lower()
-            )
+            and _blob_names_harness(f"{p.name} {p.cmdline}", harness, names)
         ]
 
     newest = _newest(probes.session_mtimes)

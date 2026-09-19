@@ -106,6 +106,26 @@ class IdleTests(unittest.TestCase):
         self.assertFalse(cmdline_looks_like_agent("Cursor Helper (GPU)"))
         self.assertFalse(cmdline_looks_like_agent("/usr/bin/cloud-agent runner", harness="codex"))
 
+    def test_macos_noise_does_not_mark_ag_mid_run(self):
+        """``ag`` is a substring of ``ssh-agent`` — must not trip Antigravity."""
+        procs = [
+            ProcInfo(pid=1, name="ssh-agent", cmdline="/usr/bin/ssh-agent -l", cpu=0.0),
+            ProcInfo(pid=2, name="UserEventAgent", cmdline="UserEventAgent", cpu=0.1),
+            ProcInfo(pid=3, name="cfprefsd", cmdline="/usr/sbin/cfprefsd", cpu=0.0),
+        ]
+        r = detect_idle("ag", IdleProbes(now=NOW, processes=procs, session_mtimes=[]))
+        self.assertFalse(r.mid_run)
+        self.assertTrue(r.idle)
+        self.assertFalse(cmdline_looks_like_agent("/usr/bin/ssh-agent -l", "ssh-agent", "ag"))
+
+    def test_antigravity_agent_is_mid_run(self):
+        procs = [
+            ProcInfo(pid=4, name="Antigravity", cmdline="Antigravity", cpu=1.0),
+            ProcInfo(pid=5, name="node", cmdline="antigravity-agent --workspace x", cpu=20.0, parent_pid=4),
+        ]
+        r = detect_idle("ag", IdleProbes(now=NOW, processes=procs))
+        self.assertTrue(r.mid_run)
+
 
 if __name__ == "__main__":
     unittest.main()
